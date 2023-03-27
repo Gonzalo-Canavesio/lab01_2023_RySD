@@ -22,7 +22,7 @@ import socket
 import optparse
 
 PREFIX = "http://"
-HTTP_PORT = 80   # El puerto por convencion para HTTP,
+HTTP_PORT = 80  # El puerto por convencion para HTTP,
 # según http://tools.ietf.org/html/rfc1700
 HTTP_OK = "200"  # El codigo esperado para respuesta exitosa.
 
@@ -56,12 +56,12 @@ def parse_server(url):
     """
     assert url.startswith(PREFIX)
     # Removemos el prefijo:
-    path = url[len(PREFIX):]
-    path_elements = path.split('/')
+    path = url[len(PREFIX) :]
+    path_elements = path.split("/")
     result = path_elements[0]
 
     assert url.startswith(PREFIX + result)
-    assert '/' not in result
+    assert "/" not in result
 
     return result
 
@@ -91,11 +91,16 @@ def connect_to_server(server_name):
     # COMPLETAR ABAJO DE ESTA LINEA
     # Aqui deberian obtener la direccion ip del servidor y asignarla
     # a ip_address
+    ip_address = socket.gethostbyname(server_name)
+    print(ip_address)
     # DEJAR LA LINEA SIGUIENTE TAL COMO ESTA
     sys.stderr.write("Contactando al servidor en %s...\n" % ip_address)
     # Crear socket
     # COMPLETAR ABAJO DE ESTA LINEA
+    new_socket = socket.socket()
     # Aqui deben conectarse al puerto correcto del servidor
+    new_socket.connect((ip_address, HTTP_PORT))
+    return new_socket
     # NO MODIFICAR POR FUERA DE ESTA FUNCION
 
 
@@ -119,14 +124,14 @@ def read_line(connection):
 
     Si se produce un error, genera una excepcion.
     """
-    result = b''
+    result = b""
     error = False
     # Leer de a un byte
     try:
         data = connection.recv(1)
     except:
         error = True
-    while not error and data != b'' and data != b'\n':
+    while not error and data != b"" and data != b"\n":
         result = result + data
         try:
             data = connection.recv(1)
@@ -163,9 +168,12 @@ def check_http_response(header):
     False
     """
     header = header.decode()
-    elements = header.split(' ', 3)
-    return (len(elements) >= 2 and elements[0].startswith("HTTP/")
-            and elements[1] == HTTP_OK)
+    elements = header.split(" ", 3)
+    return (
+        len(elements) >= 2
+        and elements[0].startswith("HTTP/")
+        and elements[1] == HTTP_OK
+    )
 
 
 def get_response(connection, filename):
@@ -185,13 +193,13 @@ def get_response(connection, filename):
     else:
         # Saltear el resto del encabezado
         line = read_line(connection)
-        while line != b'\r\n' and line != b'':
+        while line != b"\r\n" and line != b"":
             line = read_line(connection)
 
         # Descargar los datos al archivo
         output = open(filename, "wb")
         data = connection.recv(BUFFER_SIZE)
-        while data != b'':
+        while data != b"":
             output.write(data)
             data = connection.recv(BUFFER_SIZE)
         output.close()
@@ -213,8 +221,9 @@ def download(url, filename):
         sys.stderr.write("No se encontro la direccion '%s'\n" % server)
         sys.exit(1)
     except socket.error:
-        sys.stderr.write("No se pudo conectar al servidor HTTP en '%s:%d'\n"
-                         % (server, HTTP_PORT))
+        sys.stderr.write(
+            "No se pudo conectar al servidor HTTP en '%s:%d'\n" % (server, HTTP_PORT)
+        )
         sys.exit(1)
 
     # Enviar pedido, recibir respuesta
@@ -236,8 +245,9 @@ def main():
     """Procesa los argumentos, y llama a download()"""
     # Parseo de argumentos
     parser = optparse.OptionParser(usage="usage: %prog [options] http://...")
-    parser.add_option("-o", "--output", help="Archivo de salida",
-                      default="download.html")
+    parser.add_option(
+        "-o", "--output", help="Archivo de salida", default="download.html"
+    )
     options, args = parser.parse_args()
     if len(args) != 1:
         sys.stderr.write("No se indico una URL a descargar\n")
@@ -247,8 +257,7 @@ def main():
     # Validar el argumento
     url = args[0]
     if not url.startswith(PREFIX):
-        sys.stderr.write("La direccion '%s' no comienza con '%s'\n" % (url,
-                                                                       PREFIX))
+        sys.stderr.write("La direccion '%s' no comienza con '%s'\n" % (url, PREFIX))
         sys.exit(1)
 
     download(url, options.output)
